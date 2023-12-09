@@ -110,4 +110,17 @@ config SOC_CANAAN_K210_DTB_SOURCE
 
 endif # ARCH_CANAAN
 
+config ARCH_SOPHGO
+	bool "Sophgo SoCs"
+	help
+	  This enables support for Sophgo SoC platform hardware.
+
+config SOPHGO_MULTI_CHIP_CLOCK_SYNC
+	bool "Sophgo multi-chip clock synchronous"
+	depends on ARCH_SOPHGO
+	default n
+	help
+	  To solve the problem of asynchronous multi-chip clocks,
+	  the local timer has been replaced with an APB timer.
+
 endmenu # "SoC selection"

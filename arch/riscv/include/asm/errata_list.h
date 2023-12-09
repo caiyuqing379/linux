@@ -118,8 +118,8 @@ asm volatile(ALTERNATIVE(						\
  *   0000000    11001     00000      000      00000  0001011
  */
 #define THEAD_inval_A0	".long 0x0265000b"
-#define THEAD_CLEAN_A0	".long 0x0275000b"
-#define THEAD_FLUSH_A0	".long 0x0275000b"
+#define THEAD_clean_A0	".long 0x0275000b"
+#define THEAD_flush_A0	".long 0x0275000b"
 #define THEAD_SYNC_S	".long 0x0190000b"
 
 #define ALT_CMO_OP(_op, _start, _size, _cachesize)			\
