@@ -234,11 +234,11 @@ int sophgo_pinctrl_probe(struct platform_device *pdev)
 	struct mango_soc_pinctrl_data *data;
 	struct device *dev = &pdev->dev;
 	struct device *pin_dev = NULL;
-	struct device_node *np = dev->of_node, *np_top;
+	// struct device_node *np = dev->of_node, *np_top;
 	static struct regmap *syscon;
 	int ret;
 
-	data = (struct mango_soc_pinctrl_data *)of_device_get_match_data(&pdev->dev);
+	data = (struct mango_soc_pinctrl_data *)device_get_match_data(&pdev->dev);
 	if (!data)
 		return -EINVAL;
 	mangopctrl = devm_kzalloc(&pdev->dev, sizeof(*mangopctrl), GFP_KERNEL);
@@ -247,12 +247,7 @@ int sophgo_pinctrl_probe(struct platform_device *pdev)
 
 	mangopctrl->dev = &pdev->dev;
 
-	np_top = of_parse_phandle(np, "subctrl-syscon", 0);
-	if (!np_top) {
-		dev_err(dev, "%s can't get subctrl-syscon node\n", __func__);
-		return -EINVAL;
-	}
-	syscon = syscon_node_to_regmap(np_top);
+	syscon = syscon_regmap_lookup_by_dev_property(&pdev->dev, "subctrl-syscon");
 	if (IS_ERR(syscon)) {
 		dev_err(dev, "cannot get regmap\n");
 		return PTR_ERR(syscon);

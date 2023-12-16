@@ -31,6 +31,9 @@ extern struct regmap *syscon_regmap_lookup_by_phandle_args(
 extern struct regmap *syscon_regmap_lookup_by_phandle_optional(
 					struct device_node *np,
 					const char *property);
+extern struct regmap *syscon_regmap_lookup_by_dev_property(
+	        struct device *dev,
+          const char *propname);
 #else
 static inline struct regmap *device_node_to_regmap(struct device_node *np)
 {
@@ -68,6 +71,13 @@ static inline struct regmap *syscon_regmap_lookup_by_phandle_optional(
 					const char *property)
 {
 	return NULL;
+}
+
+static inline struct regmap *syscon_regmap_lookup_by_dev_property(
+	        struct device *dev,
+          const char *propname);
+{
+ return ERR_PTR(-ENOSYS);
 }
 
 #endif

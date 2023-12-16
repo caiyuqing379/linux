@@ -8,6 +8,7 @@
  * Author: Dong Aisheng <dong.aisheng@linaro.org>
  */
 
+#include <linux/acpi.h>
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/hwspinlock.h>
@@ -287,6 +288,53 @@ struct regmap *syscon_regmap_lookup_by_phandle_optional(struct device_node *np,
 }
 EXPORT_SYMBOL_GPL(syscon_regmap_lookup_by_phandle_optional);
 
+struct regmap *syscon_regmap_lookup_by_dev_property(struct device *dev,
+          const char *propname)
+{
+  struct fwnode_handle *fwnode;
+  struct regmap *regmap = NULL;
+
+  fwnode = fwnode_find_reference(dev_fwnode(dev), propname, 0);
+	if (IS_ERR(fwnode)) {
+	  dev_err(dev, "%s: reference isn't exist.", __func__);
+		return ERR_PTR(-ENODEV);
+	}
+
+  if (IS_ENABLED(CONFIG_OF) && dev->of_node) {
+    struct device_node *syscon_np;
+
+    if (propname)
+      syscon_np = to_of_node(fwnode);
+    else
+      syscon_np = dev->of_node;
+    if (!syscon_np)
+      return ERR_PTR(-ENODEV);
+
+    regmap = syscon_node_to_regmap(syscon_np);
+    of_node_put(syscon_np);
+  } else if (IS_ENABLED(CONFIG_ACPI)) {
+    struct acpi_device *adev;
+		struct device *dev;
+    struct syscon *syscon;
+
+    adev = to_acpi_device_node(fwnode);
+    if (!adev)
+      return ERR_PTR(-ENODEV);
+
+	  dev = bus_find_device_by_acpi_dev(&platform_bus_type, adev);
+    if (!dev)
+      return ERR_PTR(-ENODEV);
+
+    syscon = platform_get_drvdata(to_platform_device(dev));
+    if (!syscon)
+      return ERR_PTR(-ENODEV);
+
+    regmap = syscon->regmap;
+ }
+ return regmap;
+}
+EXPORT_SYMBOL_GPL(syscon_regmap_lookup_by_dev_property);
+
 static int syscon_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
@@ -329,9 +377,16 @@ static const struct platform_device_id syscon_ids[] = {
 	{ }
 };
 
+static const struct acpi_device_id syscon_acpi_match[] = {
+  { "SG200020", 0 },
+  {}
+};
+MODULE_DEVICE_TABLE(acpi, syscon_acpi_match);
+
 static struct platform_driver syscon_driver = {
 	.driver = {
 		.name = "syscon",
+		.acpi_match_table = ACPI_PTR(syscon_acpi_match),
 	},
 	.probe		= syscon_probe,
 	.id_table	= syscon_ids,
